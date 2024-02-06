@@ -176,7 +176,7 @@ func GetGeoWithinDoc(db *mongo.Database, collname string, coordinates Polygon) (
 			},
 		},
 	}
-
+	
 	var docs []FullGeoJson
 	cur, err := db.Collection(collname).Find(context.TODO(), filter)
 	if err != nil {
@@ -361,7 +361,7 @@ func GetCenterDoc(db *mongo.Database, collname string, coordinates Point) (resul
 	filter := bson.M{
 		"geometry": bson.M{
 			"$geoWithin": bson.M{
-				"$center": []interface{}{coordinates.Coordinates, 0.003},
+				"$center": []interface{}{coordinates.Coordinates, coordinates.Radius},
 			},
 		},
 	}

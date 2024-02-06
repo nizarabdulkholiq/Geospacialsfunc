@@ -1,8 +1,11 @@
 package Geospacialsfunc
 
+
 import (
 	"os"
 
+	"github.com/Befous/BackendGin/helpers"
+	"github.com/Befous/BackendGin/models"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 )
@@ -24,6 +27,51 @@ func SetConnection2dsphere(mongoenv, dbname, collname string) *mongo.Database {
 		CollectionName: collname,
 	}
 	return Create2dsphere(DBmongoinfo)
+}
+
+// ----------------------------------------------------------------------- User -----------------------------------------------------------------------
+
+// Create
+
+func InsertUser(mongoenv *mongo.Database, collname string, datauser User) interface{} {
+	return InsertOneDoc(mongoenv, collname, datauser)
+}
+
+// Read
+
+func GetAllUser(mconn *mongo.Database, collname string) []User {
+	return GetAllDoc[[]User](mconn, collname)
+}
+
+func FindUser(mconn *mongo.Database, collname string, userdata User) User {
+	filter := bson.M{"username": userdata.Username}
+	return GetOneDoc[User](mconn, collname, filter)
+}
+
+func IsPasswordValid(mconn *mongo.Database, collname string, userdata User) bool {
+	filter := bson.M{"username": userdata.Username}
+	res := GetOneDoc[User](mconn, collname, filter)
+	hashChecker := CheckPasswordHash(userdata.Password, res.Password)
+	return hashChecker
+}
+
+func UsernameExists(mconn *mongo.Database, collname string, userdata User) bool {
+	filter := bson.M{"username": userdata.Username}
+	return DocExists[User](mconn, collname, filter, userdata)
+}
+
+// Update
+
+func UpdateUser(mconn *mongo.Database, collname string, datauser User) interface{} {
+	filter := bson.M{"username": datauser.Username}
+	return ReplaceOneDoc(mconn, collname, filter, datauser)
+}
+
+// Delete
+
+func DeleteUser(mconn *mongo.Database, collname string, userdata User) interface{} {
+	filter := bson.M{"username": userdata.Username}
+	return DeleteOneDoc(mconn, collname, filter)
 }
 
 // ---------------------------------------------------------------------- Geojson ----------------------------------------------------------------------
@@ -57,8 +105,8 @@ func DeleteGeojson(mconn *mongo.Database, collname string, userdata User) interf
 	return DeleteOneDoc(mconn, collname, filter)
 }
 
-func GeoIntersects(mconn *mongo.Database, collname string, coordinates Point) string {
-	return GetGeoIntersectsDoc(mconn, collname, coordinates)
+func GeoIntersects(mconn *mongo.Database, collname string, geospatial models.Geospatial) ([]FullGeoJson, error) {
+	return helpers.GetGeoIntersectsDoc[FullGeoJson](mconn, collname, "geometry", geospatial)
 }
 
 func GeoWithin(mconn *mongo.Database, collname string, coordinates Polygon) string {
